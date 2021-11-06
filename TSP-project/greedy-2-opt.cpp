@@ -7,7 +7,7 @@ using namespace std;
 
 // Euclidean distance rounded to nearest integer
 int dist(float x1, float y1, float x2, float y2) {
-    return round(sqrt(pow(x2-x1,2) + pow(y2-y1,2)));
+    return round(sqrt(pow(x2-x1, 2) + pow(y2-y1, 2)));
 }
 
 int main() {
@@ -23,10 +23,10 @@ int main() {
         cin >> cities_y[i];
     }
 
-    /* cout << numCities << endl; 
+    cout << numCities << endl; 
     for (int i = 0; i < numCities; i++){
         cout << cities_x[i] << ", " << cities_y[i] << endl;
-    } */
+    }
 
     // Find naive tour
     int * tour = new int[numCities];
@@ -35,7 +35,6 @@ int main() {
 
     tour[0] = 0;
     used[0] = true;
-
     for (int i = 1; i < numCities; i++) {
         best = -1;
         for (int j = 0; j < numCities; j++) { 

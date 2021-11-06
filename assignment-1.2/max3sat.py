@@ -2,6 +2,31 @@ import unittest
 # Example input: (ᆨx1 ∨ x2 ∨  x3) ∧ (x2 ∨ x1 ∨ ᆨx3) = [(1,0,0, 1, 2, 3), (0,0,1, 2, 1 ,3)]
 
 
+# E(c1 and c2) = E(c1) + E(c2)
+# (x1, not x2, False) == # cases where clause is true / # possible cases = 3/4
+# (False, False, False)
+# 2 * 2 = 4
+
+# 
+# 
+# 7m/8 = E[M] = 0.5 E[M | x = 1] + 0.5 
+# choose a val for x that givs the bigger expected value 
+# that expected value with be >= 7m/8
+
+# when A > C
+# 2C = (C + e) + B ===> B = (C - e)
+# 2C = (C + e) + B
+
+
+#E[m | x = 0] = 0.5 E[M | x =0, x2 = 1] + 0.5 E[M | x =0, x2 = 0]
+# 7m/8 = E[M] <= E[M | x0 is set] <= ... <= E[M | everything expect the last set] <= E[M | set everything]
+# 
+
+\
+# 7m/8 <= E[M | set everything]
+
+
+
 def calcExpectedValue(clauses, variables):
     expected_value = 0
     for (neg1, neg2, neg3, x1, x2, x3) in clauses: # Go through every clause encoded with form (ᆨ1, ᆨ2, ᆨ3, x1, x2, x3)
@@ -18,7 +43,7 @@ def calcExpectedValue(clauses, variables):
 
 
         # Calculate logical values of x1, x2, x3 when XORed with their negations. Set as a negative version of their index if they are still a random variable
-        x1_val = -x1 - 1 if variables[x1] == None else neg1 != variables[x1]
+        x1_val = None if variables[x1] == None else neg1 != variables[x1]
         x2_val = -x2 - 1 if variables[x2] == None else neg2 != variables[x2]
         x3_val = -x3 - 1 if variables[x3] == None else neg3 != variables[x3]
 
@@ -41,11 +66,11 @@ def calcExpectedValue(clauses, variables):
 
 def Max3SAT(logical_statement, m, n):
     variables = [None] * n              # Initialize variables where None signifies a random variable
-    for i in range(len(variables)):     # Greedy iteration over setting variables to True/False
+    for i in range(n):     # Greedy iteration over setting variables to True/False
 
         # Expected value when variables[i] = True
         variables[i] = 1
-        expected_value_true = calcExpectedValue(logical_statement, variables)
+        expected_value_true = calcExpectedValue(logical_statement, variables) # expected number of true clauses
 
         # Expected value when variables[i] = False
         variables[i] = 0

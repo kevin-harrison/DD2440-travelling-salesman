@@ -1,77 +1,69 @@
-#include <iostream>  
+#include <iostream>
 #include <stdlib.h>
 #include <cmath>
 #include <iomanip>
+#include <vector>
 
 using namespace std;
 
 // Euclidean distance rounded to nearest integer
-double dist(double x1, double y1, double x2, double y2) {
-    return round(sqrt(pow(x2-x1, 2) + pow(y2-y1, 2)));
+double dist(pair<double, double> city_a, pair<double, double> city_b)
+{
+    return round(sqrt(pow(city_a.first - city_b.first, 2) + pow(city_a.second - city_b.second, 2)));
 }
 
-int main() {
+int main()
+{
     // Read input
     std::cout << std::fixed;
     std::cout << std::setprecision(10);
     
-    while(true) {
-        int numCities;
-        if (cin >> numCities) {
+    int num_cities;
+    if (cin >> num_cities)
+    {
+        pair<double, double> cities[num_cities];
 
-            double * cities_x = new double[numCities];
-            double * cities_y = new double[numCities];
-            
-            for (int i = 0; i < numCities; i++) {
-                cin >> cities_x[i];
-                cin >> cities_y[i];
-            }
+        for (int i = 0; i < num_cities; i++)
+        {
+            double xcord, ycord;
+            cin >> xcord >> ycord;
+            cities[i] = make_pair(xcord, ycord);
+        }
 
-            cout << numCities << endl; 
-            for (int i = 0; i < numCities; i++){
-                cout << cities_x[i] << " " << cities_y[i] << endl;
-            } 
+        // Debug print what has been input from stdin
+        /* cout << num_cities << endl;
+        for (int i = 0; i < num_cities; i++)
+        {
+            cout << to_string(cities[i].first) + " " + to_string(cities[i].second) + "\n";
+        } */
 
-            // Find naive tour
-            int * tour = new int[numCities];
-            bool * used = new bool[numCities];
-            int best;
+        // Find naive tour
+        vector<int> tour;
+        vector<bool> used;
+        tour.resize(num_cities, -1);
+        used.resize(num_cities, false);
+        int best;
 
-            tour[0] = 0;
-            used[0] = true;
-            for (int i = 1; i < numCities; i++) {
-                best = -1;
-                for (int j = 0; j < numCities; j++) { 
-                    if (!used[j] && (best == -1 || dist(cities_x[tour[i-1]], cities_y[tour[i-1]], cities_x[j], cities_y[j]) < 
-                                                dist(cities_x[tour[i-1]], cities_y[tour[i-1]], cities_x[best], cities_y[best]))) {
-                        best = j;
-                    }
+        tour[0] = 0;
+        used[0] = true;
+        for (int i = 1; i < num_cities; i++)
+        {
+            best = -1;
+            for (int j = 0; j < num_cities; j++)
+            {
+                if (!used[j] && (best == -1 || dist(cities[tour[i - 1]], cities[j]) <
+                                                   dist(cities[tour[i - 1]], cities[best])))
+                {
+                    best = j;
                 }
-                tour[i] = best;
-                used[best] = true;
             }
+            tour[i] = best;
+            used[best] = true;
+        }
 
-            for (int i = 0; i < numCities; i++) {
-                cout << tour[i] << endl;
-            }
-
-            delete[] cities_x;
-            delete[] cities_y;
-            delete[] tour;
-            delete[] used;
+        for (int i = 0; i < num_cities; i++)
+        {
+            cout << tour[i] << endl;
         }
     }
 }
-
-/* 
-tour[0] = 0
-used[0] = true
-for i = 1 to n-1
-    best = -1 // index of best city to go to next?
-    for j = 0 to n-1
-        if not used[j] and (best = -1 or dist(tour[i-1], j) < dist(tour[i-1], best))
-        best = j
-    tour[i] = best
-    used[best] = true
-return tour 
-*/

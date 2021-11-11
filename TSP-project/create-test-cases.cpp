@@ -1,9 +1,8 @@
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>     /* srand, rand */
-#include <fstream>
 #include <string.h>
-#include <ctime>
+#include <sys/time.h>
 
 using namespace std;
 
@@ -11,7 +10,7 @@ string makeTest() {
     string test = "";
     float HI = 180;
     float LO = -HI;
-    int numCities = rand() % 10 + 1; //Random integer from 1 to 100
+    int numCities = rand() % 10 + 1;
     test = test + to_string(numCities) + "\n";
     for (size_t i = 0; i < numCities; i++)
     {
@@ -25,22 +24,24 @@ string makeTest() {
 
 int main(int argc, char * argv[])
 {
-
-    std::istringstream ss(argv[1]);
-    int x;
-    if (!(ss >> x)) {
-        std::cerr << "Invalid number: " << argv[1] << '\n';
+    // Get number of tests in program argument
+    istringstream ss(argv[1]);
+    int numOfTests;
+    if (!(ss >> numOfTests)) {
+        cerr << "Invalid number: " << argv[1] << '\n';
     } else if (!ss.eof()) {
-        std::cerr << "Trailing characters after number: " << argv[1] << '\n';
+        cerr << "Trailing characters after number: " << argv[1] << '\n';
     }
-
-
-    srand((uint) * argv[1]);
-    int numOfTests = 100;
+    
+    // Seed random number generator with microseconds
+    timeval t1;
+    gettimeofday(&t1, NULL);
+    srand(t1.tv_usec * t1.tv_sec);
+ 
+    // Send test cases to stdout
     for(int i=0; i<numOfTests; i++) {
         string test = makeTest();
         cout << test;
-        // TODO: Check if output is malformed somehow
     }
     return 0;
 }

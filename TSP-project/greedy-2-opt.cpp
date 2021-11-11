@@ -31,11 +31,11 @@ int main()
         }
 
         // Debug print what has been input from stdin
-        /* cout << num_cities << endl;
+        cout << num_cities << endl;
         for (int i = 0; i < num_cities; i++)
         {
             cout << to_string(cities[i].first) + " " + to_string(cities[i].second) + "\n";
-        } */
+        }
 
         // Find naive tour
         vector<int> tour;

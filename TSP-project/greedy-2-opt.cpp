@@ -4,7 +4,9 @@
 #include <iomanip>
 #include <vector>
 #include <string>
+#include <tuple>
 
+using std::tuple;
 using namespace std;
 
 void print_vector(vector<int>& vect){
@@ -148,6 +150,46 @@ void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& ci
 }
 
 
+vector<vector<int> > kruskals(vector<pair<double, double> >& cities, int num_cities) {
+    vector<tuple<int, int, float> > edges = getEdges(vector<pair<double, double> > &cities);
+    cout << "EDGES: " << endl;
+    for (int i = 0; i < len(edges); i++) {
+        cout << edges[i] << endl;
+    }
+    
+    /* vector<vector<int>> mst;
+    mst.reserve(num_cities);
+    pair<int,int> edge;
+    unvisited_cities = cities;
+    while (len(unvisited_cities) > 0) {
+        edge = 
+        
+    } */
+}
+
+vector<tuple<int, int, float> > getEdges(vector<pair<double, double> >& cities) {
+    vector<tuple<int, int, float>> edges;
+    int to_reseverve = 0
+    for (int i = num_citites-1; i > 0; i--) {
+        to_reseverve += i;
+    }
+    edges.reserve(to_reserve);
+    for (int i = 0; i < num_cities-1; i++) {
+        for (int j = i+1; j < num_cities; j++) {
+            tuple<int,int,float> edge = <i, j, dist(i, j, dist(i, j, cities))>;
+            edges.insert(edge);
+        }
+    }
+    sort(edges.begin(), edges.end(), sortbysec);
+}
+
+bool sortByDist(const tuple<int, int, float>& a, 
+               const tuple<int, int, float>& b)
+{
+    return (get<2>(a) < get<2>(b));
+}
+
+
 int main()
 {
     
@@ -177,12 +219,16 @@ int main()
         // Get initial tour
         vector<int> initial_tour;
         initial_tour.resize(num_cities);
-        getNaiveTour(num_cities, cities, initial_tour);
-        double naive_dist = total_distance(initial_tour, cities);
+        
+        kruskals(cities, num_cities);
+        //getNaiveTour(num_cities, cities, initial_tour);
+        //double naive_dist = total_distance(initial_tour, cities);
 
         // Improve tour with heuristic
-        twoOpt(initial_tour, num_cities, cities);
-        double new_dist = total_distance(initial_tour, cities);
+        //twoOpt(initial_tour, num_cities, cities);
+        //double new_dist = total_distance(initial_tour, cities);
+
+
 
         // Print answer
         for (int i = 0; i < num_cities; i++)

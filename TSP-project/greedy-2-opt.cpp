@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include <algorithm>
 
 using std::tuple;
 using namespace std;
@@ -149,46 +150,44 @@ void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& ci
     }
 }
 
-
-vector<vector<int> > kruskals(vector<pair<double, double> >& cities, int num_cities) {
-    vector<tuple<int, int, float> > edges = getEdges(vector<pair<double, double> > &cities);
-    cout << "EDGES: " << endl;
-    for (int i = 0; i < len(edges); i++) {
-        cout << edges[i] << endl;
-    }
-    
-    /* vector<vector<int>> mst;
-    mst.reserve(num_cities);
-    pair<int,int> edge;
-    unvisited_cities = cities;
-    while (len(unvisited_cities) > 0) {
-        edge = 
-        
-    } */
-}
-
-vector<tuple<int, int, float> > getEdges(vector<pair<double, double> >& cities) {
-    vector<tuple<int, int, float>> edges;
-    int to_reseverve = 0
-    for (int i = num_citites-1; i > 0; i--) {
-        to_reseverve += i;
-    }
-    edges.reserve(to_reserve);
-    for (int i = 0; i < num_cities-1; i++) {
-        for (int j = i+1; j < num_cities; j++) {
-            tuple<int,int,float> edge = <i, j, dist(i, j, dist(i, j, cities))>;
-            edges.insert(edge);
-        }
-    }
-    sort(edges.begin(), edges.end(), sortbysec);
-}
-
 bool sortByDist(const tuple<int, int, float>& a, 
                const tuple<int, int, float>& b)
 {
     return (get<2>(a) < get<2>(b));
 }
 
+vector<tuple<int, int, float> > getEdges(vector<pair<double, double> >& cities, int num_cities) {
+    vector<tuple<int, int, float>> edges;
+    int to_reserve = 0;
+    for (int i = num_cities-1; i > 0; i--) {
+        to_reserve += i;
+    }
+    edges.reserve(to_reserve);
+    for (int i = 0; i < num_cities-1; i++) {
+        for (int j = i+1; j < num_cities; j++) {
+            tuple<int,int,float> edge = make_tuple(i, j, dist(i, j, cities));
+            edges.insert(edge);
+        }
+    }
+    sort(edges.begin(), edges.end(), sortByDist);
+}
+
+vector<vector<int> > kruskals(vector<pair<double, double> >& cities, int num_cities) {
+    vector<tuple<int, int, float> > edges = getEdges(vector<pair<double, double> > &cities, num_cities);
+    cout << "EDGES: " << endl;
+    for (int i = 0; i < edges.size(); i++) {
+        cout << to_string(edges[i]) << endl;
+    }
+    
+    /* vector<vector<int>> mst;
+    mst.reserve(num_cities);
+    pair<int,int> edge;
+    unvisited_cities = cities;
+    while (unvisited_cities.size() > 0) {
+        edge = 
+        
+    } */
+}
 
 int main()
 {
@@ -236,7 +235,7 @@ int main()
             cout << initial_tour[i] << endl;
         }
 
-        cout << naive_dist << endl;
-        cout << new_dist << endl;
+        /* cout << naive_dist << endl;
+        cout << new_dist << endl; */
     }
 }

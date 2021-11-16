@@ -5,6 +5,7 @@
 #include <sys/time.h>
 
 using namespace std;
+using std::to_string;
 
 string makeTest() {
     string test = "";

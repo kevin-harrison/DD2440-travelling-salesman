@@ -1,7 +1,7 @@
 #!/bin/bash
 
-g++ create-test-cases.cpp -o tester.o &&
-g++ greedy-2-opt.cpp -o tsp.o &&
+g++ -std=c++0x create-test-cases.cpp -o tester.o &&
+g++ -std=c++0x greedy-2-opt.cpp -o tsp.o &&
 
 mkfifo fifo
 for i in {1..1}

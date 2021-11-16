@@ -89,7 +89,7 @@ void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& ci
 
                 cout << "i-1 = " << wrapped_index_below << endl;
                 cout << "j+1 = " << wrapped_index_above << endl;
-            
+
                 if ((j - i) < 2) { // Case 1: i and j are at least neighbors of neighbors ==> two distances to update
                     new_dist = best_dist - dist(tour[wrapped_index_below], tour[i], cities) 
                                          - dist(tour[j], tour[wrapped_index_above], cities) 

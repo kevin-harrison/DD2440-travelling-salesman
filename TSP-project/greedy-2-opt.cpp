@@ -64,7 +64,7 @@ void getNaiveTour(int num_cities, vector<pair<double, double> >& cities, vector<
 }
 
 
-void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& cities) {
+void almostTwoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& cities) {
     double new_dist;
     double best_dist = total_distance(tour, cities);
     //cout << "Initial distance: " << best_dist << endl;
@@ -142,6 +142,47 @@ void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& ci
                 tour[j] = temp;  
                 best_dist = new_dist;
                 //goto label;
+            }
+        }
+    }
+}
+
+void swap_tour(vector<int>& tour, int start, int end){
+    int temp;
+
+    if (start > end) {
+        temp = start;
+        start = end;
+        end = temp;
+    }
+
+    for(int i= 0; i < floor((end - start) / 2); i++) {
+        // swap tour[start+i] and tour[end-i]
+        temp = tour[start+i];
+        tour[start+i] = tour[end-i];
+        tour[end-i] = temp;
+    }
+}
+
+void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& cities) {
+    double new_dist;
+    double best_dist = total_distance(tour, cities);
+    //cout << "Initial distance: " << best_dist << endl;
+    int temp;
+
+    // try to find an improvement
+    for (int i = 0; i < num_cities-1; i++) {
+        for (int j = i+1; j < num_cities; j++) {
+
+            /* c1 = i   c2 = i+1           c3=j     c4=j+1 */
+            // d(c1,c2) + d(c3,c4) > d(c2, c3) + d(c1, c4)
+            double edge1 = dist(tour[i], tour[i+1], cities);
+            double edge2 = dist(tour[j], tour[(j+1) % num_cities], cities);
+            double edge3 = dist(tour[i+1], tour[j], cities);
+            double edge4 = dist(tour[i], tour[(j+1) % num_cities], cities);
+            if (edge1 + edge2 >  edge3 + edge4) {
+                cout << "FOUND AN IMPROVEMENT" << endl;
+                swap_tour(tour, i+1, (j+1) % num_cities);
             }
         }
     }

@@ -19,32 +19,29 @@ void print_vector(vector<int>& vect){
     return round(sqrt(pow(city_a.first - city_b.first, 2) + pow(city_a.second - city_b.second, 2)));
 }*/
 
-double dist(int city_a, int city_b, vector<pair<double, double>>& cities)
+double dist(int city_a, int city_b, vector<pair<double, double> >& cities)
 {
     return round(sqrt(pow(cities[city_a].first  - cities[city_b].first, 2) +
                       pow(cities[city_a].second - cities[city_b].second, 2)));
 }
 
 
-double total_distance(vector<int>& tour, vector<pair<double, double>>& cities) {
+double total_distance(vector<int>& tour, vector<pair<double, double> >& cities) {
     double total_dist = 0;
     int num_tour = tour.size();
     //cout << "num tour: " << num_tour << endl;
     for(int i = 0; i<num_tour; i++){
-        cout << "total dist: " << total_dist << endl;
+        //cout << "total dist: " << total_dist << endl;
         total_dist += dist(tour[i], tour[(i+1)%num_tour], cities);
     }
-    cout << "total dist: " << total_dist << endl;
+    //cout << "total dist: " << total_dist << endl;
 
     return total_dist;
 }
 
 
 // Find naive tour
-void getNaiveTour(int num_cities, vector<pair<double, double>>& cities, vector<int>& tour) {
-    //vector<int> *tour = new vector<int>();
-    
-    //tour.resize(num_cities, -1);
+void getNaiveTour(int num_cities, vector<pair<double, double> >& cities, vector<int>& tour) {
     vector<bool> used;
     used.resize(num_cities, false);
     int best;
@@ -66,66 +63,87 @@ void getNaiveTour(int num_cities, vector<pair<double, double>>& cities, vector<i
     }
 }
 
-// If i and j are neighbors OR i and j shifted down are neighbors
-bool areNeighbours(int i, int j, int num_cities){
-    return ((i-j) < 2) || ((i - (j - num_cities)) < 2);
-}
 
-
-void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double>>& cities) {
+void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& cities) {
     double new_dist;
     double best_dist = total_distance(tour, cities);
-    cout << "Initial distance: " << best_dist << endl;
+    //cout << "Initial distance: " << best_dist << endl;
     int temp;
 
-    while (true) {
-        // try to find an improvement
-        label: for (int i = 0; i < num_cities-1; i++) {
-            for (int j = i+1; j < num_cities; j++) {
-                cout << i << ", " << j << endl;
+    // try to find an improvement
+    label: for (int i = 0; i < num_cities-1; i++) {
+        for (int j = i+1; j < num_cities; j++) {
+            //cout << "-------------------------------------" << endl;
+            //cout << i << ", " << j << endl;
 
-                // Check if new tour by swapping 2 edge endpoints is an improvement
-                //(a%b+b)%b turning remainder operator into mod operator
+            // Check if new tour by swapping 2 edge endpoints is an improvement
+            //(a%b+b)%b turning remainder operator into mod operator
 
-                int wrapped_index_below = (((i-1) % num_cities) + num_cities) % num_cities;
-                int wrapped_index_above = (j+1) % num_cities;
-            
-                if (areNeighbours(i,j,num_cities)) { // Case 1: i and j are at least neighbors of neighbors ==> two distances to update
-                    new_dist = best_dist - dist(tour[wrapped_index_below], tour[i], cities) 
-                                         - dist(tour[j], tour[wrapped_index_above], cities) 
-                                         + dist(tour[wrapped_index_below], tour[j], cities) 
-                                         + dist(tour[i], tour[wrapped_index_above], cities);
-                } else { // Case 2: four distances to update
-                    new_dist = best_dist - dist(tour[wrapped_index_below], tour[i], cities) // i-1 and i
-                                         - dist(tour[i], tour[i+1], cities)
-                                         - dist(tour[j-1], tour[j], cities)
-                                         - dist(tour[j], tour[wrapped_index_above], cities)
-                                         + dist(tour[wrapped_index_below], tour[j], cities) // i-1 and j
-                                         + dist(tour[j], tour[i+1], cities) // j and i+1
-                                         + dist(tour[j-1], tour[i], cities) // j-1 and i
-                                         + dist(tour[i], tour[wrapped_index_above], cities); // i and j+1
-                }
+            int wrapped_index_below = (((i-1) % num_cities) + num_cities) % num_cities;
+            int wrapped_index_above = (j+1) % num_cities;
+        
+            //cout << "i-1 = " << wrapped_index_below << endl;
+            //cout << "j+1 = " << wrapped_index_above << endl;
 
-                cout << "tour: ";
-                print_vector(tour);
-                cout << "dist=" << best_dist << endl;
-                cout << "new_dist=" << new_dist << endl << endl;
+            if ((j-i) < 2) { // Case 1: i and j are neighbors or neighbors of neighbors ==> two distances to update
+                new_dist = best_dist - dist(tour[i], tour[wrapped_index_below], cities)  // -d(i, i-1)
+                                        - dist(tour[j], tour[wrapped_index_above], cities)  // -d(j, j+1)
+                                        + dist(tour[j], tour[wrapped_index_below], cities)  // +d(j, i-1)
+                                        + dist(tour[i], tour[wrapped_index_above], cities); // +d(i, j+1)
+                /* cout << "i and j 2-neighbors"<< endl;
+                cout << "-dist(i, i-1) " << dist(tour[i], tour[wrapped_index_below], cities) << endl; 
+                cout << "-dist(j, j+1) " << dist(tour[j], tour[wrapped_index_above], cities) << endl; 
+                cout << "+dist(j, i-1) " << dist(tour[j], tour[wrapped_index_below], cities) << endl; 
+                cout << "+dist(i, j+1) " << dist(tour[i], tour[wrapped_index_above], cities) << endl; */
+            }
+            else if ((i - (j - num_cities)) < 2) { // Case 2: i and j are neighbors or neighbors of neighbors because of wrapping indices ==> 2 distances to update
+                new_dist = best_dist - dist(tour[i], tour[i+1], cities)  // -d(i, i+1)
+                                        - dist(tour[j], tour[j-1], cities)  // -d(j, j-1)
+                                        + dist(tour[j], tour[i+1], cities)  // +d(j, i+1)
+                                        + dist(tour[i], tour[j-1], cities); // +d(i, j-1)
+                /* cout << "i and j wrapped-2-neighbors"<< endl;
+                cout << "-dist(i, i+1) " << dist(tour[i], tour[i+1], cities) << endl; 
+                cout << "-dist(j, j-1) " << dist(tour[j], tour[j-1], cities) << endl; 
+                cout << "+dist(j, i+1) " << dist(tour[j], tour[i+1], cities) << endl; 
+                cout << "+dist(i, j-1) " << dist(tour[i], tour[j-1], cities) << endl; */
+            }
+            else { // Case 3: four distances to update
+                new_dist = best_dist - dist(tour[wrapped_index_below], tour[i], cities) // i-1 and i
+                                        - dist(tour[i], tour[i+1], cities)
+                                        - dist(tour[j-1], tour[j], cities)
+                                        - dist(tour[j], tour[wrapped_index_above], cities)
+                                        + dist(tour[wrapped_index_below], tour[j], cities) // i-1 and j
+                                        + dist(tour[j], tour[i+1], cities) // j and i+1
+                                        + dist(tour[j-1], tour[i], cities) // j-1 and i
+                                        + dist(tour[i], tour[wrapped_index_above], cities); // i and j+1
+                //cout << "i and j aren't neighbors" << endl;
+                //cout << "dist(i-1, i) "  << dist(tour[wrapped_index_below], tour[i], cities) << endl; // i-1 and i 
+                //cout << "dist(i, i+1) "  << dist(tour[i], tour[i+1], cities) << endl;
+                //cout << "dist(j-1, j) "  << dist(tour[j-1], tour[j], cities) << endl;
+                //cout << "dist(j, j+1) "  << dist(tour[j], tour[wrapped_index_above], cities) << endl;
+                //cout << "dist(i-1, j) "  << dist(tour[wrapped_index_below], tour[j], cities) << endl; // i-1 and j
+                //cout << "dist(j, i+1) "  << dist(tour[j], tour[i+1], cities) << endl; // j and i+1
+                //cout << "dist(j-1, i) "  << dist(tour[j-1], tour[i], cities) << endl; // j-1 and i
+                //cout << "dist(i, j+1) "  << dist(tour[i], tour[wrapped_index_above], cities) << endl; // i and j+1
+            }
 
-                return;
+            //cout << "tour: ";
+            //print_vector(tour);
+            //cout << "dist=" << best_dist << endl;
+            //cout << "new_dist=" << new_dist << endl << endl;
 
-                if (new_dist < best_dist) {
-                    // Create new tour by swapping 2 edge endpoints
-                    //cout << "FOUND AN IMPROVEMENT" << endl;
-                    temp = tour[i];
-                    tour[i] = tour[j];
-                    tour[j] = temp;  
-                    best_dist = new_dist;
-                    goto label;
-                }
+            //return;
+
+            if (new_dist < best_dist) {
+                // Create new tour by swapping 2 edge endpoints
+                //cout << "FOUND AN IMPROVEMENT" << endl;
+                temp = tour[i];
+                tour[i] = tour[j];
+                tour[j] = temp;  
+                best_dist = new_dist;
+                //goto label;
             }
         }
-        // No improvement was found... give up
-        break;
     }
 }
 
@@ -140,7 +158,7 @@ int main()
     if (cin >> num_cities)
     {
         // Get input
-        vector<pair<double, double>> cities;
+        vector<pair<double, double> > cities;
         cities.reserve(num_cities);
         for (int i = 0; i < num_cities; i++)
         {
@@ -160,14 +178,19 @@ int main()
         vector<int> initial_tour;
         initial_tour.resize(num_cities);
         getNaiveTour(num_cities, cities, initial_tour);
+        double naive_dist = total_distance(initial_tour, cities);
 
         // Improve tour with heuristic
         twoOpt(initial_tour, num_cities, cities);
+        double new_dist = total_distance(initial_tour, cities);
 
         // Print answer
         for (int i = 0; i < num_cities; i++)
         {
             cout << initial_tour[i] << endl;
         }
+
+        cout << naive_dist << endl;
+        cout << new_dist << endl;
     }
 }

@@ -10,7 +10,7 @@ string makeTest() {
     string test = "";
     float HI = 180;
     float LO = -HI;
-    int numCities = 10;//rand() % 150 + 50;
+    int numCities = 1000;//rand() % 150 + 50;
     test = test + to_string(numCities) + "\n";
     for (size_t i = 0; i < numCities; i++)
     {

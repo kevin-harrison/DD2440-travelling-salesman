@@ -66,6 +66,11 @@ void getNaiveTour(int num_cities, vector<pair<double, double>>& cities, vector<i
     }
 }
 
+// If i and j are neighbors OR i and j shifted down are neighbors
+bool areNeighbours(int i, int j, int num_cities){
+    return ((i-j) < 2) || ((i - (j - num_cities)) < 2);
+}
+
 
 void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double>>& cities) {
     double new_dist;
@@ -85,7 +90,7 @@ void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double>>& cit
                 int wrapped_index_below = (((i-1) % num_cities) + num_cities) % num_cities;
                 int wrapped_index_above = (j+1) % num_cities;
             
-                if ((j - i) < 2) { // Case 1: i and j are at least neighbors of neighbors ==> two distances to update
+                if (areNeighbours(i,j,num_cities)) { // Case 1: i and j are at least neighbors of neighbors ==> two distances to update
                     new_dist = best_dist - dist(tour[wrapped_index_below], tour[i], cities) 
                                          - dist(tour[j], tour[wrapped_index_above], cities) 
                                          + dist(tour[wrapped_index_below], tour[j], cities) 

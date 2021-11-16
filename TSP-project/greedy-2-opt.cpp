@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include <cmath>
 #include <iomanip>
@@ -11,7 +12,10 @@ void print_vector(vector<int>& vect){
     for(auto i: vect){
         cout << i << ", ";
     }
+    cout << endl;
 }
+
+
 
 // Euclidean distance rounded to nearest integer
 /*double dist(pair<double, double>& city_a, pair<double, double>& city_b)
@@ -37,6 +41,30 @@ double total_distance(vector<int>& tour, vector<pair<double, double> >& cities) 
     //cout << "total dist: " << total_dist << endl;
 
     return total_dist;
+}
+
+
+void save_tour(vector<int>& tour, vector<pair<double, double> >& cities, string filename) {
+    ofstream myfile;
+    myfile.open (filename);
+    myfile << "strict digraph {\nlabel=\"" << filename << "\";" << endl;
+    myfile << "node [shape=plaintext, fontcolor=red, fixedsize=true, width=0.05];" << endl;
+
+    // Add nodes
+    for (int i = 0; i < tour.size(); i++) {
+        myfile << i << " [pos=\"" << cities[i].first << "," << cities[i].second << "!\"];" << endl;
+    }
+
+    // Add edges
+    for (int i = 0; i < tour.size(); i++) {
+        int from = tour[i];
+        int to = tour[(i+1) % tour.size()];
+        myfile << from << " -> " << to << " [label=\"" << dist(from, to, cities) << "\"];" << endl;
+    }
+
+    myfile << "}\n";
+    myfile.close();
+    return;
 }
 
 
@@ -164,26 +192,67 @@ void swap_tour(vector<int>& tour, int start, int end){
     }
 }
 
+void swap_tour_idea(vector<int>& tour, int start, int end, int best_dist){
+    int temp;
+
+    if (start > end) {
+        temp = start;
+        start = end;
+        end = temp;
+    }
+
+    //int old_dist = total_distance();
+
+    for(int i= 0; i < floor((end - start) / 2); i++) {
+        // swap tour[start+i] and tour[end-i]
+        temp = tour[start+i];
+        tour[start+i] = tour[end-i];
+        tour[end-i] = temp;
+    }
+
+
+
+
+
+}
+
 void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& cities) {
     double new_dist;
     double best_dist = total_distance(tour, cities);
     //cout << "Initial distance: " << best_dist << endl;
     int temp;
 
+    int counter = 0;
+    save_tour(tour, cities, "tour" + to_string(counter) + ".dot");
+    print_vector(tour);
+
     // try to find an improvement
-    for (int i = 0; i < num_cities-1; i++) {
+    label: for (int i = 0; i < num_cities-1; i++) {
         for (int j = i+1; j < num_cities; j++) {
+
+            if (j == i+1 || i == ((j+1) % num_cities)) continue;// Nodes are neighbors so swap is meaningless
+
 
             /* c1 = i   c2 = i+1           c3=j     c4=j+1 */
             // d(c1,c2) + d(c3,c4) > d(c2, c3) + d(c1, c4)
-            double edge1 = dist(tour[i], tour[i+1], cities);
-            double edge2 = dist(tour[j], tour[(j+1) % num_cities], cities);
-            double edge3 = dist(tour[i+1], tour[j], cities);
-            double edge4 = dist(tour[i], tour[(j+1) % num_cities], cities);
+            double edge1 = dist(tour[i],   tour[i+1], cities);                  // dist(c1,c2)
+            double edge2 = dist(tour[j],   tour[(j+1) % num_cities], cities);   // dist(c3,c4)
+            double edge3 = dist(tour[i],   tour[j], cities);                    // dist(c1,c3)
+            double edge4 = dist(tour[i+1], tour[(j+1) % num_cities], cities);   // dist(c2,c4)
             if (edge1 + edge2 >  edge3 + edge4) {
-                cout << "FOUND AN IMPROVEMENT" << endl;
-                swap_tour(tour, i+1, (j+1) % num_cities);
-            }
+                cout << "FOUND AN IMPROVEMENT swapping: " << tour[i+1] << " - " << tour[j] << endl;
+                counter += 1;
+                swap_tour(tour, i+1, j);
+                print_vector(tour);
+                cout << endl;
+                save_tour(tour, cities, "tour" + to_string(counter) + ".dot");
+                goto label;
+            } 
+            
+            // Check if the swap results in shorter path
+            
+
+            // call swap_tour() if it is
         }
     }
 }

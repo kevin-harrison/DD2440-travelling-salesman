@@ -7,6 +7,7 @@
 #include <string>
 #include <tuple>
 #include <algorithm>
+#include <set>
 
 using std::tuple;
 using namespace std;
@@ -147,31 +148,99 @@ vector<tuple<int, int, float> > getEdges(vector<pair<double, double> >& cities, 
     for (int i = num_cities-1; i > 0; i--) {
         to_reserve += i;
     }
+    cout << "to_reserve: " << to_reserve << endl;
     edges.reserve(to_reserve);
+    vector<tuple<int, int, float> >::iterator it;
+    it = edges.begin();
     for (int i = 0; i < num_cities-1; i++) {
         for (int j = i+1; j < num_cities; j++) {
             tuple<int,int,float> edge = make_tuple(i, j, dist(i, j, cities));
-            edges.insert(edge);
+            edges.insert(it, edge);
         }
     }
     sort(edges.begin(), edges.end(), sortByDist);
+    return edges;
 }
 
-vector<vector<int> > kruskals(vector<pair<double, double> >& cities, int num_cities) {
-    vector<tuple<int, int, float> > edges = getEdges(vector<pair<double, double> > &cities, num_cities);
-    cout << "EDGES: " << endl;
-    for (int i = 0; i < edges.size(); i++) {
-        cout << to_string(edges[i]) << endl;
-    }
-    
-    /* vector<vector<int>> mst;
-    mst.reserve(num_cities);
-    pair<int,int> edge;
-    unvisited_cities = cities;
-    while (unvisited_cities.size() > 0) {
-        edge = 
+bool checkAndMergeClusters(set<set<int> > vertexClusters, int v1, int v2) {
+    bool foundV = false;
+    set<int> firstCluster;
+    for (set<set<int> >::iterator clusterIt = vertexClusters.begin(); clusterIt != vertexClusters.end(); ++clusterIt) {
+
+        if ((*clusterIt).find(v1) != (*clusterIt).end()) { // Found v1
+            if (firstCluster.size() != 0) { // Has already found v2
+                // Merge v1 and v2 clusters and delete the other cluster.
+                firstCluster.insert((*clusterIt).begin(), (*clusterIt).end());
+                vertexClusters.erase(*clusterIt);
+                return true;
+            }
+            if ((*clusterIt).find(v2) == (*clusterIt).end()) { // Did not find v2
+                firstCluster = *clusterIt;
+            } else { // Found v2 in the same set
+                return false;
+            }
+        }
+        if ((*clusterIt).find(v2) == (*clusterIt).end()) { // Found v2
+            if (firstCluster.size() != 0) { // Has already found v1
+                // Merge v1 and v2 clusters and delete the other cluster.
+                firstCluster.insert((*clusterIt).begin(), (*clusterIt).end());
+                vertexClusters.erase(*clusterIt);
+                return true;
+            }
+            if ((*clusterIt).find(v1) != (*clusterIt).end()) { // Did not find v1
+                firstCluster = *clusterIt;
+            } else { // Found v1 in the same set
+                return false;
+            }
+        }
         
-    } */
+    }
+    return false;
+}
+
+
+/* returns a vector of vectors of ints. This represents a list of vertices, where each of them has a list of edges that attach them to the MST */
+vector<vector<int> > kruskals(vector<pair<double, double> >& cities, int num_cities) {
+    vector<tuple<int, int, float> > edges = getEdges(cities, num_cities);
+    /*
+    // Print edges
+    cout << "EDGES: " << endl;
+    cout << to_string(edges.size()) << endl;
+    for (int i = 0; i < edges.size(); i++) {
+        cout << "(" << to_string(get<0>(edges[i])) << ", " << to_string(get<1>(edges[i])) << ", " << to_string(get<2>(edges[i])) << ")" << endl;
+    }
+    cout << endl;*/
+
+    set<set<int> > vertexClusters({});
+    for (int index = 0; index < num_cities; index++) {
+        //cout << "insert " << index << endl;
+        set<int> cluster;
+        cluster.insert(index);
+        vertexClusters.insert(cluster);
+    } 
+
+    /*
+    // Print vertexClusters
+    for (set<set<int> >::iterator clusterIt = vertexClusters.begin(); clusterIt != vertexClusters.end(); ++clusterIt) {
+        for (set<int>::iterator vertexIt = (*clusterIt).begin(); vertexIt != (*clusterIt).end(); ++vertexIt) {
+            cout << *vertexIt << " ";
+        }
+        cout << endl;
+    }*/
+
+    vector<vector<int> > mst{};
+    vector<vector<int> >::iterator it;
+    bool merge = false;
+    for (tuple<int, int, float> edge : edges) {
+        merge = checkAndMergeClusters(vertexClusters, get<0>(edge), get<1>(edge));
+        if (merge) {
+            it = get<get<0>(edge)>(mst).begin();
+            get<get<0>(edge)>(mst).insert(it, get<1>(edge));
+            it = get<get<1>(edge)>(mst).begin();
+            get<get<1>(edge)>(mst).insert(it, get<0>(edge));
+        }
+    }
+    return mst;
 }
 
 int main()
@@ -214,6 +283,7 @@ int main()
 
 
 
+        cout << "---------------------------------ANSWER---------------------------------" << endl; 
         // Print answer
         for (int i = 0; i < num_cities; i++)
         {

@@ -103,30 +103,44 @@ void swap_tour(vector<int>& tour, int start, int end){
 }
 
 
+float getCostDiff(vector<int>& tour, float**& distMatrix, int i, int j, int num_cities){
+    float newEdges =  distMatrix[tour[i]][tour[j]] + distMatrix[tour[i+1]][tour[(j+1) % num_cities]];
+    float prevEdges = distMatrix[tour[i]][tour[i+1]] + distMatrix[tour[j]][tour[(j+1) % num_cities]];
+    return newEdges - prevEdges;
+}
 
-void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& cities) {   
+void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& cities, float**& distMatrix) {   
     int improvements = 1;
     int counter = 0;
+    int minCost = 1;
+    int iMin = 0;
+    int jMin = 0;
+    int cost = 0;
 
     
-    label: if (counter > 30 || improvements == 0) return;
-    improvements = 0;
-
+    label: if (counter > 600 || minCost == 0) return;
+    minCost = 0;
     // Iterate over all cities to find swapping improvements
     for (int i = 0; i < num_cities-1; i++) {
         for (int j = i+1; j < num_cities; j++) {
             if (j == i+1 || i == ((j+1) % num_cities)) continue; // Nodes are neighbors so swap is meaningless
+            
+            //double edge1 = dist(tour[i],   tour[i+1], cities);                  // dist(c1,c2)
+            //double edge2 = dist(tour[j],   tour[(j+1) % num_cities], cities);   // dist(c3,c4)
+            //double edge3 = dist(tour[i],   tour[j], cities);                    // dist(c1,c3)
+            //double edge4 = dist(tour[i+1], tour[(j+1) % num_cities], cities);   // dist(c2,c4)
+            cost = getCostDiff(tour, distMatrix, i,j, num_cities);
 
-            double edge1 = dist(tour[i],   tour[i+1], cities);                  // dist(c1,c2)
-            double edge2 = dist(tour[j],   tour[(j+1) % num_cities], cities);   // dist(c3,c4)
-            double edge3 = dist(tour[i],   tour[j], cities);                    // dist(c1,c3)
-            double edge4 = dist(tour[i+1], tour[(j+1) % num_cities], cities);   // dist(c2,c4)
-            if (edge1 + edge2 >  edge3 + edge4) { // Only swap if it will result in a shorter tour
-                swap_tour(tour, i+1, j);
-                improvements += 1;
+            if (minCost > cost) { // Only swap if it will result in a shorter tour
+                minCost = cost;
+                iMin = i+1;
+                jMin = j;
                 //save_tour(tour, cities, "./graphs/tour" + to_string(counter) + ".dot");
             } 
         }
+    }
+    if (minCost < 0){
+        swap_tour(tour, iMin, jMin);
     }
     counter += 1;
     goto label;
@@ -166,8 +180,20 @@ int main()
         //double naive_dist = total_distance(initial_tour, cities);
         //save_tour(initial_tour, cities, "./graphs/tour_initial.dot");
 
+        /// Create distance-matrix
+        float **distMatrix;
+        distMatrix = new float *[num_cities];
+        for(int i = 0; i <num_cities; i++)
+            distMatrix[i] = new float[num_cities];
+
+        for(int i = 0; i< num_cities;i++){
+            for(int j = 0; j< num_cities;j++){
+                distMatrix[i][j] = dist(i, j, cities); 
+            }
+        }
+
         // Improve tour with heuristic
-        twoOpt(initial_tour, num_cities, cities);
+        twoOpt(initial_tour, num_cities, cities, distMatrix);
         //double new_dist = total_distance(initial_tour, cities);
         //save_tour(initial_tour, cities, "./graphs/tour_final.dot");
 

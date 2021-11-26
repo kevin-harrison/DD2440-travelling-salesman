@@ -25,14 +25,14 @@ double dist(int city_a, int city_b, vector<pair<double, double> >& cities)
 
 
 // Calculate the distance of an entire tour
-double total_distance(vector<int>& tour, vector<pair<double, double> >& cities) {
+double total_distance(vector<int>& tour, float**& dist_matrix) {
     double total_dist = 0;
     int num_tour = tour.size();
 
-    for(int i = 0; i<num_tour; i++) {
-        total_dist += dist(tour[i], tour[(i+1)%num_tour], cities);
+    for(int i = 0; i< num_tour-1; i++) {
+        total_dist += dist_matrix[tour[i]][tour[i+1]];
     }
-    return total_dist;
+    return total_dist + dist_matrix[tour[num_tour-1]][tour[0]]; // Add distance linking back to cycle start
 }
 
 
@@ -122,8 +122,8 @@ void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& ci
     minCost = 0;
     // Iterate over all cities to find swapping improvements
     for (int i = 0; i < num_cities-1; i++) {
-        for (int j = i+1; j < num_cities; j++) {
-            if (j == i+1 || i == ((j+1) % num_cities)) continue; // Nodes are neighbors so swap is meaningless
+        for (int j = i+2; j < num_cities; j++) {
+            if (i == ((j+1) % num_cities)) continue; // Nodes are neighbors so swap is meaningless
             
             //double edge1 = dist(tour[i],   tour[i+1], cities);                  // dist(c1,c2)
             //double edge2 = dist(tour[j],   tour[(j+1) % num_cities], cities);   // dist(c3,c4)
@@ -173,13 +173,7 @@ int main()
             cout << to_string(cities[i].first) + " " + to_string(cities[i].second) + "\n";
         } */
 
-        // Get initial tour
-        vector<int> initial_tour;
-        initial_tour.resize(num_cities);
-        getNaiveTour(num_cities, cities, initial_tour);
-        //double naive_dist = total_distance(initial_tour, cities);
-        //save_tour(initial_tour, cities, "./graphs/tour_initial.dot");
-
+        
         /// Create distance-matrix
         float **distMatrix;
         distMatrix = new float *[num_cities];
@@ -192,9 +186,16 @@ int main()
             }
         }
 
+        // Get initial tour
+        vector<int> initial_tour;
+        initial_tour.resize(num_cities);
+        getNaiveTour(num_cities, cities, initial_tour);
+        double naive_dist = total_distance(initial_tour, distMatrix);
+        //save_tour(initial_tour, cities, "./graphs/tour_initial.dot");
+
         // Improve tour with heuristic
         twoOpt(initial_tour, num_cities, cities, distMatrix);
-        //double new_dist = total_distance(initial_tour, cities);
+        double new_dist = total_distance(initial_tour, distMatrix);
         //save_tour(initial_tour, cities, "./graphs/tour_final.dot");
 
         // Print answer
@@ -203,7 +204,7 @@ int main()
             cout << initial_tour[i] << endl;
         }
 
-        //cout << naive_dist << endl;
-        //cout << new_dist << endl;
+        cout << naive_dist << endl;
+        cout << new_dist << endl;
     }
 }

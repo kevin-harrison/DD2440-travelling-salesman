@@ -32,3 +32,14 @@
 
 ### Greedy first path
 The Greedy heuristic gradually constructs a tour by repeatedly selecting the shortest edge and adding it to the tour as long as it doesn’t create a cycle with less than N edges, or increases the degree of any node to more than 2
+
+
+### Optimizations
+
+Setup distance matrix and edges at the same time
+- edges fewer than distances
+	- Use hashmap from 
+	- Check if edge already inserted into edges
+
+
+1 - 4 - 5 - 3 - 6 - 3 - 1 - 2 - 1

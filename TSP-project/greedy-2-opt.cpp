@@ -8,6 +8,8 @@
 #include <tuple>
 #include <algorithm>
 #include <set>
+#include <stack>
+
 
 using std::tuple;
 using namespace std;
@@ -29,14 +31,16 @@ double dist(int city_a, int city_b, vector<pair<double, double>> &cities)
 }
 
 // Calculate the distance of an entire tour
-double total_distance(vector<int>& tour, float**& dist_matrix) {
+double total_distance(vector<int> &tour, float **&dist_matrix)
+{
     double total_dist = 0;
     int num_tour = tour.size();
 
-    for(int i = 0; i< num_tour-1; i++) {
-        total_dist += dist_matrix[tour[i]][tour[i+1]];
+    for (int i = 0; i < num_tour - 1; i++)
+    {
+        total_dist += dist_matrix[tour[i]][tour[i + 1]];
     }
-    return total_dist + dist_matrix[tour[num_tour-1]][tour[0]]; // Add distance linking back to cycle start
+    return total_dist + dist_matrix[tour[num_tour - 1]][tour[0]]; // Add distance linking back to cycle start
 }
 
 // Save tour to file filename in a .dot file format
@@ -113,14 +117,15 @@ void swap_tour(vector<int> &tour, int start, int end)
     }
 }
 
-
-float getCostDiff(vector<int>& tour, float**& distMatrix, int i, int j, int num_cities){
-    float newEdges =  distMatrix[tour[i]][tour[j]] + distMatrix[tour[i+1]][tour[(j+1) % num_cities]];
-    float prevEdges = distMatrix[tour[i]][tour[i+1]] + distMatrix[tour[j]][tour[(j+1) % num_cities]];
+float getCostDiff(vector<int> &tour, float **& distMatrix, int i, int j, int num_cities)
+{
+    float newEdges = distMatrix[tour[i]][tour[j]] + distMatrix[tour[i + 1]][tour[(j + 1) % num_cities]];
+    float prevEdges = distMatrix[tour[i]][tour[i + 1]] + distMatrix[tour[j]][tour[(j + 1) % num_cities]];
     return newEdges - prevEdges;
 }
 
-void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& cities, float**& distMatrix) {   
+void twoOpt(vector<int> &tour, int num_cities, vector<pair<double, double>> &cities, float **&distMatrix)
+{
     int improvements = 1;
     int counter = 0;
     int minCost = 1;
@@ -128,29 +133,35 @@ void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& ci
     int jMin = 0;
     int cost = 0;
 
-    
-    label: if (counter > 600 || minCost == 0) return;
+label:
+    if (counter > 600 || minCost == 0)
+        return;
     minCost = 0;
     // Iterate over all cities to find swapping improvements
-    for (int i = 0; i < num_cities-1; i++) {
-        for (int j = i+2; j < num_cities; j++) {
-            if (i == ((j+1) % num_cities)) continue; // Nodes are neighbors so swap is meaningless
-            
+    for (int i = 0; i < num_cities - 1; i++)
+    {
+        for (int j = i + 2; j < num_cities; j++)
+        {
+            if (i == ((j + 1) % num_cities))
+                continue; // Nodes are neighbors so swap is meaningless
+
             //double edge1 = dist(tour[i],   tour[i+1], cities);                  // dist(c1,c2)
             //double edge2 = dist(tour[j],   tour[(j+1) % num_cities], cities);   // dist(c3,c4)
             //double edge3 = dist(tour[i],   tour[j], cities);                    // dist(c1,c3)
             //double edge4 = dist(tour[i+1], tour[(j+1) % num_cities], cities);   // dist(c2,c4)
-            cost = getCostDiff(tour, distMatrix, i,j, num_cities);
+            cost = getCostDiff(tour, distMatrix, i, j, num_cities);
 
-            if (minCost > cost) { // Only swap if it will result in a shorter tour
+            if (minCost > cost)
+            { // Only swap if it will result in a shorter tour
                 minCost = cost;
-                iMin = i+1;
+                iMin = i + 1;
                 jMin = j;
                 //save_tour(tour, cities, "./graphs/tour" + to_string(counter) + ".dot");
             }
         }
     }
-    if (minCost < 0){
+    if (minCost < 0)
+    {
         swap_tour(tour, iMin, jMin);
     }
     counter += 1;
@@ -163,29 +174,6 @@ bool sortByDist(const tuple<int, int, float> &a,
     return (get<2>(a) < get<2>(b));
 }
 
-vector<tuple<int, int, float>> getEdges(vector<pair<double, double>> &cities, int num_cities)
-{
-    vector<tuple<int, int, float>> edges;
-    int to_reserve = 0;
-    for (int i = num_cities - 1; i > 0; i--)
-    {
-        to_reserve += i;
-    }
-    edges.reserve(to_reserve);
-    vector<tuple<int, int, float>>::iterator it;
-    it = edges.begin();
-    for (int i = 0; i < num_cities - 1; i++)
-    {
-        for (int j = i + 1; j < num_cities; j++)
-        {
-            tuple<int, int, float> edge = make_tuple(i, j, dist(i, j, cities));
-            edges.insert(it, edge);
-        }
-    }
-    sort(edges.begin(), edges.end(), sortByDist);
-    return edges;
-}
-
 int find_cluster(int i, int *vertexClusters)
 {
     if (i == vertexClusters[i])
@@ -195,14 +183,17 @@ int find_cluster(int i, int *vertexClusters)
     return find_cluster(vertexClusters[i], vertexClusters);
 }
 
-bool contains(vector<int> v, int x) {
-    if(std::find(v.begin(), v.end(), x) != v.end()) {
+bool contains(vector<int> v, int x)
+{
+    if (std::find(v.begin(), v.end(), x) != v.end())
+    {
         return true;
     }
     return false;
 }
 
-void printGraph(vector<vector<int> > v) {
+void printGraph(vector<vector<int>> v)
+{
     int i = 0;
     vector<vector<int>>::iterator row;
     vector<int>::iterator col;
@@ -218,7 +209,8 @@ void printGraph(vector<vector<int> > v) {
     }
 }
 
-void printGraph(vector<int>*& v) {
+void printGraph(vector<int> *&v)
+{
     for (size_t i = 0; i < v->size(); i++)
     {
         cout << "VERTEX " << i << ": ";
@@ -227,25 +219,14 @@ void printGraph(vector<int>*& v) {
             cout << v[i][j] << " ";
         }
         cout << endl;
-    } 
+    }
 }
 
 /* returns a vector of vectors of ints. This represents a list of vertices, where each of them has a list of edges that attach them to the MST */
-vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
+vector<int> christofides(vector<pair<double, double>> &cities, int num_cities, vector<tuple<int, int, float>> edges)
 {
     // -------------------------------Kruskals-----------------------------------
-
-    vector<tuple<int, int, float>> edges = getEdges(cities, num_cities);
     
-    // Print edges
-    /* cout << "EDGES: " << endl;
-    cout << to_string(edges.size()) << endl;
-    for (int i = 0; i < edges.size(); i++) {
-        cout << "(" << to_string(get<0>(edges[i])) << ", " << to_string(get<1>(edges[i])) << ", " << to_string(get<2>(edges[i])) << ")" << endl;
-    }
-    cout << endl; */
-
-    //vector<vector<int> > vertexClusters({});
     vector<vector<int>> mst{};
     mst.reserve(num_cities);
     int *vertexClusters = new int[num_cities];
@@ -313,15 +294,15 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
     cout << "MST: " << endl;
     printGraph(mst); */
 
-    
-
     // -------------------------------Find minimal matching-----------------------------------
 
     // ha lista med odd degree vertices
     vector<int> oddVertices;
     oddVertices.reserve(num_cities); // Could be improved
-    for (int i = 0; i < mst.size(); i++) {
-        if (mst[i].size() % 2 != 0) { // Odd degree
+    for (int i = 0; i < mst.size(); i++)
+    {
+        if (mst[i].size() % 2 != 0)
+        { // Odd degree
             oddVertices.push_back(i);
         }
     }
@@ -329,12 +310,13 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
     // gå igenom edges kortast -> längst
     for (size_t i = 0; i < edges.size(); i++)
     {
-        if (contains(oddVertices, get<0>(edges[i])) && contains(oddVertices, get<1>(edges[i]))) {
+        if (contains(oddVertices, get<0>(edges[i])) && contains(oddVertices, get<1>(edges[i])))
+        {
             // lägg till den i mst
             mst[get<0>(edges[i])].push_back(get<1>(edges[i]));
             mst[get<1>(edges[i])].push_back(get<0>(edges[i]));
 
-            // ta bort elementen ur listan med odd degree vertices  
+            // ta bort elementen ur listan med odd degree vertices
             oddVertices.erase(find(oddVertices.begin(), oddVertices.end(), get<0>(edges[i])));
             oddVertices.erase(find(oddVertices.begin(), oddVertices.end(), get<1>(edges[i])));
         }
@@ -349,7 +331,8 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
     // Copy mst
     vector<int> *mstCopy = new vector<int>[num_cities];
     //mstCopy.reserve(num_cities);
-    for (int i = 0; i < num_cities; i++) {
+    for (int i = 0; i < num_cities; i++)
+    {
         //mstCopy[i].reserve(mst[i].size());
         mstCopy[i].resize(mst[i].size());
         mstCopy[i] = mst[i];
@@ -360,37 +343,42 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
 
     int start = 0;
     stack<int> stack;
-	int pos = start;
+    int pos = start;
     vector<int> path;
-    path.reserve(2*num_cities);
+    path.reserve(2 * num_cities);
     path.push_back(start);
-    while(!stack.empty() || mstCopy[pos].size() > 0){
-		//Current node has no neighbors
-		if(mstCopy[pos].empty()){
-			//add to circuit
-			path.push_back(pos);
-			//remove last vertex from stack and set it to current
-			pos = stack.top();
-			stack.pop();
-		}
-		//If current node has neighbors
-		else{
-			//Add vertex to stack
-			stack.push(pos); 
-			//Take a neighbor
-			int neighbor = mstCopy[pos].back();
-			//Remove edge between neighbor and current vertex
-			mstCopy[pos].pop_back();
-			for(int i = 0; i < mstCopy[neighbor].size(); i++){
-				if(mstCopy[neighbor][i] == pos){
-					mstCopy[neighbor].erase(mstCopy[neighbor].begin()+i);
-				}
-			}
-			//Set neighbor as current vertex
-			pos = neighbor;
-		}
-	}
-	path.push_back(pos);
+    while (!stack.empty() || mstCopy[pos].size() > 0)
+    {
+        //Current node has no neighbors
+        if (mstCopy[pos].empty())
+        {
+            //add to circuit
+            path.push_back(pos);
+            //remove last vertex from stack and set it to current
+            pos = stack.top();
+            stack.pop();
+        }
+        //If current node has neighbors
+        else
+        {
+            //Add vertex to stack
+            stack.push(pos);
+            //Take a neighbor
+            int neighbor = mstCopy[pos].back();
+            //Remove edge between neighbor and current vertex
+            mstCopy[pos].pop_back();
+            for (int i = 0; i < mstCopy[neighbor].size(); i++)
+            {
+                if (mstCopy[neighbor][i] == pos)
+                {
+                    mstCopy[neighbor].erase(mstCopy[neighbor].begin() + i);
+                }
+            }
+            //Set neighbor as current vertex
+            pos = neighbor;
+        }
+    }
+    path.push_back(pos);
 
     /* cout << "--------------------------" << endl;
     cout << "Euler cycle: " << endl;
@@ -401,25 +389,56 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
 
     //---------------------- Euler circuit without duplicates (Hamiltonian) -----------------------
 
-    bool* visited = new bool[num_cities];
-    for(int i = 0; i < num_cities; i++){
-		visited[i] = 0;
-	}
+    bool *visited = new bool[num_cities];
+    for (int i = 0; i < num_cities; i++)
+    {
+        visited[i] = 0;
+    }
 
     vector<int> tour;
     tour.reserve(num_cities);
 
-    for (int i = 0; i < path.size(); i++) {
-        if (!visited[path[i]]) {
+    for (int i = 0; i < path.size(); i++)
+    {
+        if (!visited[path[i]])
+        {
             tour.push_back(path[i]);
             visited[path[i]] = true;
         }
     }
-    
+
     delete[] vertexClusters;
     delete[] mstCopy;
     delete[] visited;
     return tour;
+}
+
+void prepareDistMarixAndEdges(float **&distMatrix, vector<tuple<int, int, float> > &edges, int num_cities, vector<pair<double, double> > &cities)
+{
+    // Reserve edges
+    int to_reserve = 0;
+    // Calculate distances, populate distance matrix and edges
+    for (int i = 0; i < num_cities; i++)
+    {
+        distMatrix[i] = new float[num_cities];
+        to_reserve += i;
+    }
+    edges.reserve(to_reserve);
+
+
+    tuple<int, int, float> edge;
+    for (int i = 0; i < num_cities; i++)
+    {
+        for (int j = i+1; j < num_cities; j++)
+        {
+            int distance = dist(i, j, cities);
+            distMatrix[i][j] = distance;
+            distMatrix[j][i] = distance;
+            edge = make_tuple(i, j, distance);
+            edges.push_back(edge);
+        }
+    }
+    sort(edges.begin(), edges.end(), sortByDist);
 }
 
 int main()
@@ -440,36 +459,34 @@ int main()
             cin >> xcord >> ycord;
             cities[i] = make_pair(xcord, ycord);
         }
-        
-        // Create distance-matrix
+
         float **distMatrix;
         distMatrix = new float *[num_cities];
-        for(int i = 0; i <num_cities; i++)
-            distMatrix[i] = new float[num_cities];
+        vector<tuple<int, int, float>> edges;
+        prepareDistMarixAndEdges(distMatrix, edges, num_cities, cities);
 
-        for(int i = 0; i< num_cities;i++){
-            for(int j = 0; j< num_cities;j++){
-                distMatrix[i][j] = dist(i, j, cities); 
-            }
+        // Print edges
+        /* cout << "EDGES: " << endl;
+        cout << to_string(edges.size()) << endl;
+        for (int i = 0; i < edges.size(); i++) {
+            cout << "(" << to_string(get<0>(edges[i])) << ", " << to_string(get<1>(edges[i])) << ", " << to_string(get<2>(edges[i])) << ")" << endl;
         }
+        cout << endl; */
 
         // Get initial tour
-        
-        /*
+
         vector<int> initial_tour;
         initial_tour.resize(num_cities);
-        getNaiveTour(num_cities, cities, initial_tour);
-        double naive_dist = total_distance(initial_tour, distMatrix);
-        save_tour(initial_tour, cities, "./graphs/naive_tour.dot");
-        twoOpt(initial_tour, num_cities, cities, distMatrix);
-        double two_opt_naive_dist = total_distance(initial_tour, distMatrix);
-        save_tour(initial_tour, cities, "./graphs/2opt_naive_tour.dot");
-        */
+        //getNaiveTour(num_cities, cities, initial_tour);
+        //double naive_dist = total_distance(initial_tour, distMatrix);
+        //save_tour(initial_tour, cities, "./graphs/naive_tour.dot");
+        //twoOpt(initial_tour, num_cities, cities, distMatrix);
+        //double two_opt_naive_dist = total_distance(initial_tour, distMatrix);
+        //save_tour(initial_tour, cities, "./graphs/2opt_naive_tour.dot");
 
-        vector<int> chris_tour = christofides(cities, num_cities);
+        vector<int> chris_tour = christofides(cities, num_cities, edges);
         //double chris_dist = total_distance(chris_tour, distMatrix);
         //save_tour(chris_tour, cities, "./graphs/christofides_tour.dot");
-        
 
         // Improve tour with heuristic
         twoOpt(chris_tour, num_cities, cities, distMatrix);

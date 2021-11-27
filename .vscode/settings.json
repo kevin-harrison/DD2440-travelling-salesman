@@ -68,6 +68,9 @@
         "unordered_map": "cpp",
         "utility": "cpp",
         "vector": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "thread": "cpp",
+        "set": "cpp",
+        "__tree": "cpp"
     }
 }

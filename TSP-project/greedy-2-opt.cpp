@@ -211,8 +211,20 @@ void printGraph(vector<vector<int> > v) {
     }
 }
 
+void printGraph(vector<int>*& v) {
+    for (size_t i = 0; i < v->size(); i++)
+    {
+        cout << "VERTEX " << i << ": ";
+        for (int j = 0; j < v[i].size(); j++)
+        {
+            cout << v[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
 /* returns a vector of vectors of ints. This represents a list of vertices, where each of them has a list of edges that attach them to the MST */
-vector<vector<int>> kruskals(vector<pair<double, double>> &cities, int num_cities)
+vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
 {
     // -------------------------------Kruskals-----------------------------------
 
@@ -290,9 +302,9 @@ vector<vector<int>> kruskals(vector<pair<double, double>> &cities, int num_citie
 
     // ------------------------------ MST found ---------------------------------------------
 
-    cout << "--------------------------" << endl;
+    /* cout << "--------------------------" << endl;
     cout << "MST: " << endl;
-    printGraph(mst);
+    printGraph(mst); */
 
     
 
@@ -321,28 +333,30 @@ vector<vector<int>> kruskals(vector<pair<double, double>> &cities, int num_citie
         }
     }
 
-    cout << "--------------------------" << endl;
+    /* cout << "--------------------------" << endl;
     cout << "Minimal matching: " << endl;
-    printGraph(mst);
+    printGraph(mst); */
 
-    // ------------------------Find Euler and remove visited already nodes---------------------
+    // ------------------------Find Euler circuit---------------------
 
     // Copy mst
-    vector<vector<int> > mstCopy;
-    mstCopy.reserve(num_cities);
-    for (int i = 0; i < mst.size(); i++) {
-        mstCopy[i].reserve(mst[i].size());
-        for (int j = 0; j < mst[i].size(); j++) {
+    vector<int> *mstCopy = new vector<int>[num_cities];
+    //mstCopy.reserve(num_cities);
+    for (int i = 0; i < num_cities; i++) {
+        //mstCopy[i].reserve(mst[i].size());
+        mstCopy[i].resize(mst[i].size());
+        mstCopy[i] = mst[i];
+        /*for (int j = 0; j < mst[i].size(); j++) {
             mstCopy[i].push_back(mst[i][j]);
-        } 
-    }    
+        } */
+    }
 
-
-
+    int start = 0;
     stack<int> stack;
 	int pos = start;
     vector<int> path;
-	path.push_back(start);
+    path.reserve(2*num_cities);
+    path.push_back(start);
     while(!stack.empty() || mstCopy[pos].size() > 0){
 		//Current node has no neighbors
 		if(mstCopy[pos].empty()){
@@ -355,14 +369,14 @@ vector<vector<int>> kruskals(vector<pair<double, double>> &cities, int num_citie
 		//If current node has neighbors
 		else{
 			//Add vertex to stack
-			stack.push(pos);
+			stack.push(pos); 
 			//Take a neighbor
-			int neighbor = tempList[pos].back();
+			int neighbor = mstCopy[pos].back();
 			//Remove edge between neighbor and current vertex
-			tempList[pos].pop_back();
-			for(int i = 0; i < tempList[neighbor].size(); i++){
-				if(tempList[neighbor][i] == pos){
-					tempList[neighbor].erase(tempList[neighbor].begin()+i);
+			mstCopy[pos].pop_back();
+			for(int i = 0; i < mstCopy[neighbor].size(); i++){
+				if(mstCopy[neighbor][i] == pos){
+					mstCopy[neighbor].erase(mstCopy[neighbor].begin()+i);
 				}
 			}
 			//Set neighbor as current vertex
@@ -371,12 +385,39 @@ vector<vector<int>> kruskals(vector<pair<double, double>> &cities, int num_citie
 	}
 	path.push_back(pos);
 
+    /* cout << "--------------------------" << endl;
+    cout << "Euler cycle: " << endl;
+    for (int i = 0; i < path.size(); i++) {
+        cout << path[i] << " ";
+    }
+    cout << endl; */
+
+    //---------------------- Euler circuit without duplicates (Hamiltonian) -----------------------
+
+    bool* visited = new bool[num_cities];
+    for(int i = 0; i < num_cities; i++){
+		visited[i] = 0;
+	}
+
+    vector<int> tour;
+    tour.reserve(num_cities);
+
+    for (int i = 0; i < path.size(); i++) {
+        if (!visited[path[i]]) {
+            tour.push_back(path[i]);
+            visited[path[i]] = true;
+        }
+    }
+    
     // Börja på nod 0
     // Gå igenom alla noder som euler väg
     // Prioritera alltid dubbelvägar
     // 
-
-    return mst;
+    
+    delete[] vertexClusters;
+    delete[] mstCopy;
+    delete[] visited;
+    return tour;
 }
 
 int main()
@@ -406,16 +447,29 @@ int main()
         } */
 
         // Get initial tour
-        vector<int> initial_tour;
-        initial_tour.resize(num_cities);
-
-        kruskals(cities, num_cities);
+        /* vector<int> initial_tour;
+        initial_tour.resize(num_cities); */
         //getNaiveTour(num_cities, cities, initial_tour);
         //double naive_dist = total_distance(initial_tour, cities);
 
         // Improve tour with heuristic
         //twoOpt(initial_tour, num_cities, cities);
         //double new_dist = total_distance(initial_tour, cities);
+
+        vector<int> initial_tour;
+        initial_tour.resize(num_cities);
+        getNaiveTour(num_cities, cities, initial_tour);
+        double naive_dist = total_distance(initial_tour, cities);
+        save_tour(initial_tour, cities, "./graphs/naive_tour.dot");
+        vector<int> chris_tour = christofides(cities, num_cities);
+        save_tour(chris_tour, cities, "./graphs/christofides_tour.dot");
+        double chris_dist = total_distance(chris_tour, cities);
+
+
+        // Improve tour with heuristic
+        //twoOpt(initial_tour, num_cities, cities);
+        //double new_dist = total_distance(initial_tour, cities);
+    
 
         cout << "---------------------------------ANSWER---------------------------------" << endl;
         // Print answer
@@ -424,7 +478,7 @@ int main()
             cout << initial_tour[i] << endl;
         }
 
-        /* cout << naive_dist << endl;
-        cout << new_dist << endl; */
+        cout << "Naive dist: " << naive_dist << endl;
+        cout << "Chris dist: " << chris_dist << endl;
     }
 }

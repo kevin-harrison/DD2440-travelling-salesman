@@ -95,26 +95,37 @@ void getNaiveTour(int num_cities, vector<pair<double, double>> &cities, vector<i
 }
 
 // Reverse elements in a tour from index "start" to index "end" (inclusive)
-void swap_tour(vector<int> &tour, int start, int end)
-{
+void twoOptSwapA(vector<int> &tour, int start, int end) {
     int temp;
-
     // Make sure bounds are correct
-    if (start > end)
-    {
+    if (start > end) { // TODO: Can remove this because this case never gets called i think?
         temp = start;
         start = end;
         end = temp;
     }
 
     // Swap elements pair by pair between [start,...,end]
-    for (int i = 0; i < floor((end - start + 1) / 2); i++)
-    {
+    for (int i = 0; i < floor((end - start + 1) / 2); i++) {
         // swap tour[start+i] and tour[end-i]
         temp = tour[start + i];
         tour[start + i] = tour[end - i];
         tour[end - i] = temp;
     }
+}
+
+void twoOptSwapB(vector<int> &tour, int start, int end) {
+    int temp = tour[start+1];
+    for(int m = start+1; m < end; m++)
+        tour[m] = tour[m+1];
+    tour[end] = temp;
+}
+
+void twoOptSwapC(vector<int> &tour, int start, int end) {
+    int temp = tour[end];
+    //for (int m = start+2; m <= end; m++)
+    for (int m = end; m >= start+2; m--)
+        tour[m] = tour[m-1];
+    tour[start + 1] = temp;
 }
 
 float getCostDiff(vector<int> &tour, float **& distMatrix, int i, int j, int num_cities)
@@ -124,8 +135,7 @@ float getCostDiff(vector<int> &tour, float **& distMatrix, int i, int j, int num
     return newEdges - prevEdges;
 }
 
-void twoOpt(vector<int> &tour, int num_cities, vector<pair<double, double>> &cities, float **&distMatrix)
-{
+void twoOpt(vector<int> &tour, int num_cities, vector<pair<double, double>> &cities, float **&distMatrix) {
     int improvements = 1;
     int counter = 0;
     int minCost = 1;
@@ -133,17 +143,14 @@ void twoOpt(vector<int> &tour, int num_cities, vector<pair<double, double>> &cit
     int jMin = 0;
     int cost = 0;
 
-label:
+    label:
     if (counter > 600 || minCost == 0)
         return;
     minCost = 0;
     // Iterate over all cities to find swapping improvements
-    for (int i = 0; i < num_cities - 1; i++)
-    {
-        for (int j = i + 2; j < num_cities; j++)
-        {
-            if (i == ((j + 1) % num_cities))
-                continue; // Nodes are neighbors so swap is meaningless
+    for (int i = 0; i < num_cities - 1; i++) {
+        for (int j = i + 2; j < num_cities; j++) {
+            if (i == ((j + 1) % num_cities)) continue; // Nodes are neighbors so swap is meaningless
 
             //double edge1 = dist(tour[i],   tour[i+1], cities);                  // dist(c1,c2)
             //double edge2 = dist(tour[j],   tour[(j+1) % num_cities], cities);   // dist(c3,c4)
@@ -162,22 +169,92 @@ label:
     }
     if (minCost < 0)
     {
-        swap_tour(tour, iMin, jMin);
+        twoOptSwapA(tour, iMin, jMin);
     }
     counter += 1;
     goto label;
 }
 
-bool sortByDist(const tuple<int, int, float> &a,
-                const tuple<int, int, float> &b)
-{
+
+float getCostDiffB(vector<int> &tour, float **& distMatrix, int i, int j, int num_cities) {
+    float newEdges = distMatrix[tour[i]][tour[i+2]] + distMatrix[tour[j]][tour[i+1]] + distMatrix[tour[i + 1]][tour[(j + 1) % num_cities]];
+    float prevEdges = distMatrix[tour[i]][tour[i + 1]] + distMatrix[tour[i+1]][tour[i + 2]] + distMatrix[tour[j]][tour[(j + 1) % num_cities]];
+    return newEdges - prevEdges;
+}
+
+float getCostDiffC(vector<int> &tour, float **& distMatrix, int i, int j, int num_cities) {
+    float newEdges = distMatrix[tour[j-1]][tour[(j + 1) % num_cities]] + distMatrix[tour[i]][tour[j]] + distMatrix[tour[j]][tour[i + 1]];
+    float prevEdges = distMatrix[tour[i]][tour[i+1]]+ distMatrix[tour[j]][tour[(j + 1) % num_cities]] +  distMatrix[tour[j]][tour[j - 1]] ;
+    return newEdges - prevEdges;
+}
+
+
+void twoPointFiveOpt(vector<int> &tour, int num_cities, vector<pair<double, double>> &cities, float **&distMatrix) {
+    int improvements = 1;
+    int counter = 0;
+    int minCost = 1;
+    int iMin = 0;
+    int jMin = 0;
+    int B = 0;
+    int C = 0;
+    bool Bbest = false;
+    bool Cbest = false;
+
+
+    label:
+    if (counter > 600 || minCost == 0)
+        return;
+    minCost = 0;
+    Bbest = false;
+    Cbest = false;
+    // Iterate over all cities to find swapping improvements
+
+    for (int i = 0; i < num_cities - 3; i++) {
+        for (int j = i + 3; j < num_cities; j++) { // j = i+2 is a 2-opt move
+            if (i == ((j + 1) % num_cities)) continue; // We think this is just a 2opt move.
+            
+            B = getCostDiffB(tour, distMatrix, i, j, num_cities);
+            C = getCostDiffC(tour, distMatrix, i, j, num_cities);
+
+            if (minCost > min(B,C)) { // Only swap if it will result in a shorter tour
+                minCost = min(B,C);
+                iMin = i;
+                jMin = j;
+                if(B < C) {
+                    Bbest = true;
+                    Cbest = false;
+                } else {
+                    Bbest = false;
+                    Cbest = true;
+                }
+                //save_tour(tour, cities, "./graphs/tour" + to_string(counter) + ".dot");
+            }
+        }
+    }
+    if (Bbest) {
+        //print_vector(tour);
+        twoOptSwapB(tour, iMin, jMin);
+        //print_vector(tour);
+        //cout << "Switched " << iMin << " to " << jMin << " with swap B" << endl;
+        //cout << endl;
+    }else if(Cbest){
+        //print_vector(tour);
+        twoOptSwapC(tour, iMin, jMin);
+        //print_vector(tour);
+        //cout << "Switched " << iMin << " to " << jMin << " with swap C" << endl;
+        //cout << endl;
+    }else 
+    counter += 1;
+    goto label;
+}
+
+
+bool sortByDist(const tuple<int, int, float> &a, const tuple<int, int, float> &b) {
     return (get<2>(a) < get<2>(b));
 }
 
-int find_cluster(int i, int *vertexClusters)
-{
-    if (i == vertexClusters[i])
-    {
+int find_cluster(int i, int *vertexClusters) {
+    if (i == vertexClusters[i]) {
         return i;
     }
     return find_cluster(vertexClusters[i], vertexClusters);
@@ -475,8 +552,8 @@ int main()
 
         // Get initial tour
 
-        vector<int> initial_tour;
-        initial_tour.resize(num_cities);
+        //vector<int> initial_tour;
+        //initial_tour.resize(num_cities);
         //getNaiveTour(num_cities, cities, initial_tour);
         //double naive_dist = total_distance(initial_tour, distMatrix);
         //save_tour(initial_tour, cities, "./graphs/naive_tour.dot");
@@ -493,6 +570,11 @@ int main()
         //double two_opt_chris_dist = total_distance(chris_tour, distMatrix);
         //save_tour(chris_tour, cities, "./graphs/2opt_chris_tour.dot");
 
+        // 2.5-Opt heuristic
+        twoPointFiveOpt(chris_tour, num_cities, cities, distMatrix);
+        //double twopointfive_opt_chris_dist = total_distance(chris_tour, distMatrix);
+        //save_tour(chris_tour, cities, "./graphs/2-5opt_chris_tour.dot");
+
         //cout << "---------------------------------ANSWER---------------------------------" << endl;
         // Print answer
         for (int i = 0; i < num_cities; i++)
@@ -500,9 +582,10 @@ int main()
             cout << chris_tour[i] << endl;
         }
 
-        /* cout << "Naive dist: " << naive_dist << endl;
-        cout << "Chris dist: " << chris_dist << endl;
-        cout << "2-opt naive dist: " << two_opt_naive_dist << endl;
-        cout << "2-opt chris dist: " << two_opt_chris_dist << endl; */
+        //cout << "Naive dist: " << naive_dist << endl;
+        //cout << "Chris dist: " << chris_dist << endl;
+        //cout << "2-opt naive dist: " << two_opt_naive_dist << endl;
+        //cout << "2-opt chris dist: " << two_opt_chris_dist << endl;
+        //cout << "2.5-opt chris dist: " << twopointfive_opt_chris_dist << endl;
     }
 }

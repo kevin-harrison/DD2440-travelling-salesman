@@ -29,16 +29,14 @@ double dist(int city_a, int city_b, vector<pair<double, double>> &cities)
 }
 
 // Calculate the distance of an entire tour
-double total_distance(vector<int> &tour, vector<pair<double, double>> &cities)
-{
+double total_distance(vector<int>& tour, float**& dist_matrix) {
     double total_dist = 0;
     int num_tour = tour.size();
 
-    for (int i = 0; i < num_tour; i++)
-    {
-        total_dist += dist(tour[i], tour[(i + 1) % num_tour], cities);
+    for(int i = 0; i< num_tour-1; i++) {
+        total_dist += dist_matrix[tour[i]][tour[i+1]];
     }
-    return total_dist;
+    return total_dist + dist_matrix[tour[num_tour-1]][tour[0]]; // Add distance linking back to cycle start
 }
 
 // Save tour to file filename in a .dot file format
@@ -115,35 +113,45 @@ void swap_tour(vector<int> &tour, int start, int end)
     }
 }
 
-void twoOpt(vector<int> &tour, int num_cities, vector<pair<double, double>> &cities)
-{
+
+float getCostDiff(vector<int>& tour, float**& distMatrix, int i, int j, int num_cities){
+    float newEdges =  distMatrix[tour[i]][tour[j]] + distMatrix[tour[i+1]][tour[(j+1) % num_cities]];
+    float prevEdges = distMatrix[tour[i]][tour[i+1]] + distMatrix[tour[j]][tour[(j+1) % num_cities]];
+    return newEdges - prevEdges;
+}
+
+void twoOpt(vector<int>& tour, int num_cities, vector<pair<double, double> >& cities, float**& distMatrix) {   
     int improvements = 1;
     int counter = 0;
+    int minCost = 1;
+    int iMin = 0;
+    int jMin = 0;
+    int cost = 0;
 
-label:
-    if (counter > 30 || improvements == 0)
-        return;
-    improvements = 0;
-
+    
+    label: if (counter > 600 || minCost == 0) return;
+    minCost = 0;
     // Iterate over all cities to find swapping improvements
-    for (int i = 0; i < num_cities - 1; i++)
-    {
-        for (int j = i + 1; j < num_cities; j++)
-        {
-            if (j == i + 1 || i == ((j + 1) % num_cities))
-                continue; // Nodes are neighbors so swap is meaningless
+    for (int i = 0; i < num_cities-1; i++) {
+        for (int j = i+2; j < num_cities; j++) {
+            if (i == ((j+1) % num_cities)) continue; // Nodes are neighbors so swap is meaningless
+            
+            //double edge1 = dist(tour[i],   tour[i+1], cities);                  // dist(c1,c2)
+            //double edge2 = dist(tour[j],   tour[(j+1) % num_cities], cities);   // dist(c3,c4)
+            //double edge3 = dist(tour[i],   tour[j], cities);                    // dist(c1,c3)
+            //double edge4 = dist(tour[i+1], tour[(j+1) % num_cities], cities);   // dist(c2,c4)
+            cost = getCostDiff(tour, distMatrix, i,j, num_cities);
 
-            double edge1 = dist(tour[i], tour[i + 1], cities);                    // dist(c1,c2)
-            double edge2 = dist(tour[j], tour[(j + 1) % num_cities], cities);     // dist(c3,c4)
-            double edge3 = dist(tour[i], tour[j], cities);                        // dist(c1,c3)
-            double edge4 = dist(tour[i + 1], tour[(j + 1) % num_cities], cities); // dist(c2,c4)
-            if (edge1 + edge2 > edge3 + edge4)
-            { // Only swap if it will result in a shorter tour
-                swap_tour(tour, i + 1, j);
-                improvements += 1;
+            if (minCost > cost) { // Only swap if it will result in a shorter tour
+                minCost = cost;
+                iMin = i+1;
+                jMin = j;
                 //save_tour(tour, cities, "./graphs/tour" + to_string(counter) + ".dot");
             }
         }
+    }
+    if (minCost < 0){
+        swap_tour(tour, iMin, jMin);
     }
     counter += 1;
     goto label;
@@ -163,7 +171,6 @@ vector<tuple<int, int, float>> getEdges(vector<pair<double, double>> &cities, in
     {
         to_reserve += i;
     }
-    cout << "to_reserve: " << to_reserve << endl;
     edges.reserve(to_reserve);
     vector<tuple<int, int, float>>::iterator it;
     it = edges.begin();
@@ -231,12 +238,12 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
     vector<tuple<int, int, float>> edges = getEdges(cities, num_cities);
     
     // Print edges
-    cout << "EDGES: " << endl;
+    /* cout << "EDGES: " << endl;
     cout << to_string(edges.size()) << endl;
     for (int i = 0; i < edges.size(); i++) {
         cout << "(" << to_string(get<0>(edges[i])) << ", " << to_string(get<1>(edges[i])) << ", " << to_string(get<2>(edges[i])) << ")" << endl;
     }
-    cout << endl;
+    cout << endl; */
 
     //vector<vector<int> > vertexClusters({});
     vector<vector<int>> mst{};
@@ -283,10 +290,10 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
 
             vertexClusters[cluster1] = vertexClusters[cluster2]; // Merge
 
-            for (int i = 0; i < num_cities; i++)
+            /* for (int i = 0; i < num_cities; i++)
             {
                 cout << "VERTEX " << i << ": " << vertexClusters[i] << endl;
-            }
+            } */
         }
 
         /* merge = checkAndMergeClusters(vertexClusters, get<0>(edge), get<1>(edge));
@@ -409,11 +416,6 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities)
         }
     }
     
-    // Börja på nod 0
-    // Gå igenom alla noder som euler väg
-    // Prioritera alltid dubbelvägar
-    // 
-    
     delete[] vertexClusters;
     delete[] mstCopy;
     delete[] visited;
@@ -438,47 +440,52 @@ int main()
             cin >> xcord >> ycord;
             cities[i] = make_pair(xcord, ycord);
         }
+        
+        // Create distance-matrix
+        float **distMatrix;
+        distMatrix = new float *[num_cities];
+        for(int i = 0; i <num_cities; i++)
+            distMatrix[i] = new float[num_cities];
 
-        // Debug print what has been input from stdin
-        /* cout << num_cities << endl;
-        for (int i = 0; i < num_cities; i++)
-        {
-            cout << to_string(cities[i].first) + " " + to_string(cities[i].second) + "\n";
-        } */
+        for(int i = 0; i< num_cities;i++){
+            for(int j = 0; j< num_cities;j++){
+                distMatrix[i][j] = dist(i, j, cities); 
+            }
+        }
 
         // Get initial tour
-        /* vector<int> initial_tour;
-        initial_tour.resize(num_cities); */
-        //getNaiveTour(num_cities, cities, initial_tour);
-        //double naive_dist = total_distance(initial_tour, cities);
-
-        // Improve tour with heuristic
-        //twoOpt(initial_tour, num_cities, cities);
-        //double new_dist = total_distance(initial_tour, cities);
-
+        
+        /*
         vector<int> initial_tour;
         initial_tour.resize(num_cities);
         getNaiveTour(num_cities, cities, initial_tour);
-        double naive_dist = total_distance(initial_tour, cities);
+        double naive_dist = total_distance(initial_tour, distMatrix);
         save_tour(initial_tour, cities, "./graphs/naive_tour.dot");
-        vector<int> chris_tour = christofides(cities, num_cities);
-        save_tour(chris_tour, cities, "./graphs/christofides_tour.dot");
-        double chris_dist = total_distance(chris_tour, cities);
+        twoOpt(initial_tour, num_cities, cities, distMatrix);
+        double two_opt_naive_dist = total_distance(initial_tour, distMatrix);
+        save_tour(initial_tour, cities, "./graphs/2opt_naive_tour.dot");
+        */
 
+        vector<int> chris_tour = christofides(cities, num_cities);
+        //double chris_dist = total_distance(chris_tour, distMatrix);
+        //save_tour(chris_tour, cities, "./graphs/christofides_tour.dot");
+        
 
         // Improve tour with heuristic
-        //twoOpt(initial_tour, num_cities, cities);
-        //double new_dist = total_distance(initial_tour, cities);
-    
+        twoOpt(chris_tour, num_cities, cities, distMatrix);
+        //double two_opt_chris_dist = total_distance(chris_tour, distMatrix);
+        //save_tour(chris_tour, cities, "./graphs/2opt_chris_tour.dot");
 
-        cout << "---------------------------------ANSWER---------------------------------" << endl;
+        //cout << "---------------------------------ANSWER---------------------------------" << endl;
         // Print answer
         for (int i = 0; i < num_cities; i++)
         {
-            cout << initial_tour[i] << endl;
+            cout << chris_tour[i] << endl;
         }
 
-        cout << "Naive dist: " << naive_dist << endl;
+        /* cout << "Naive dist: " << naive_dist << endl;
         cout << "Chris dist: " << chris_dist << endl;
+        cout << "2-opt naive dist: " << two_opt_naive_dist << endl;
+        cout << "2-opt chris dist: " << two_opt_chris_dist << endl; */
     }
 }

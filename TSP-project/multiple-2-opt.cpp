@@ -499,6 +499,22 @@ int main() {
         vector<tuple<int, int, int>> edges;
         prepareDistMarixAndEdges(distMatrix, edges, num_cities, cities);
 
+        // try out christofides
+        //vector<int> christ_tour = christofides
+
+
+        /*clock_t iteration_start = clock();
+        vector<int> naive_tour;
+        naive_tour.resize(num_cities);
+        getNaiveTour(naive_tour, num_cities, distMatrix, 0);
+        twoOpt(naive_tour, num_cities, distMatrix);
+        twoPointFiveOpt(naive_tour, num_cities, distMatrix);
+        int best_dist = total_distance(naive_tour, distMatrix);
+        vector<int> best_tour = naive_tour;
+        clock_t iteration_end = clock();*/
+
+
+
         // Initial run
         clock_t iteration_start = clock();
         vector<int> naive_tour;
@@ -508,27 +524,27 @@ int main() {
         twoPointFiveOpt(naive_tour, num_cities, distMatrix);
         int best_dist = total_distance(naive_tour, distMatrix);
         vector<int> best_tour = naive_tour;
+        clock_t iteration_end = clock();
         
         // Gather time info
-        clock_t iteration_end = clock();
-        double approx_iteration_time = 1000.0 * (iteration_end-iteration_start) / CLOCKS_PER_SEC;
+        double approx_iteration_time = 1.3 * 1000.0 * (iteration_end-iteration_start) / CLOCKS_PER_SEC;
         double time_left = 2000 - (1000.0 * (iteration_start-program_start) / CLOCKS_PER_SEC);
         int iterations_left = (int) (time_left / approx_iteration_time);
 
-        cout << "init dist: " << best_dist << endl;
+        /*cout << "init dist: " << best_dist << endl;
         cout << "time left: " << time_left << "ms" << endl;
         cout << "iter time: " << approx_iteration_time << "ms" << endl;
-        cout << "iterations: " << iterations_left << endl;
+        cout << "iterations: " << iterations_left << endl;*/
 
-        
-        for (int i = 1; i < min(iterations_left, num_cities); i++) {
+
+        for (int i = 1; i < min(iterations_left, num_cities); i ++) {
             getNaiveTour(naive_tour, num_cities, distMatrix, i);
             twoOpt(naive_tour, num_cities, distMatrix);
             twoPointFiveOpt(naive_tour, num_cities, distMatrix);
             int tour_dist = total_distance(naive_tour, distMatrix);
 
             if (tour_dist < best_dist) {
-                cout << i << ": " << tour_dist << " < " << best_dist << endl;
+                //cout << i << ": " << tour_dist << " < " << best_dist << endl;
                 best_tour = naive_tour;
                 best_dist = tour_dist;
             }
@@ -559,9 +575,9 @@ int main() {
 
         //cout << "---------------------------------ANSWER---------------------------------" << endl;
         // Print answer
-        //for (int i = 0; i < num_cities; i++) {
-        //    cout << naive_tour[i] << endl;
-        //}
+        for (int i = 0; i < num_cities; i++) {
+            cout << best_tour[i] << endl;
+        }
 
         
 

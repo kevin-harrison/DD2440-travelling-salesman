@@ -500,86 +500,59 @@ int main() {
         prepareDistMarixAndEdges(distMatrix, edges, num_cities, cities);
 
         // try out christofides
-        //vector<int> christ_tour = christofides
+        vector<int> christ_tour = christofides(cities, num_cities, edges);
+        twoOpt(christ_tour, num_cities, distMatrix);
+        twoPointFiveOpt(christ_tour, num_cities, distMatrix);
+        int best_dist = total_distance(christ_tour, distMatrix);
+        vector<int> best_tour = christ_tour;
+        clock_t chris_end = clock();
+        //cout << "finished chris tour" << endl;
 
 
-        /*clock_t iteration_start = clock();
-        vector<int> naive_tour;
-        naive_tour.resize(num_cities);
-        getNaiveTour(naive_tour, num_cities, distMatrix, 0);
-        twoOpt(naive_tour, num_cities, distMatrix);
-        twoPointFiveOpt(naive_tour, num_cities, distMatrix);
-        int best_dist = total_distance(naive_tour, distMatrix);
-        vector<int> best_tour = naive_tour;
-        clock_t iteration_end = clock();*/
-
-
-
-        // Initial run
-        clock_t iteration_start = clock();
-        vector<int> naive_tour;
-        naive_tour.resize(num_cities);
-        getNaiveTour(naive_tour, num_cities, distMatrix, 0);
-        twoOpt(naive_tour, num_cities, distMatrix);
-        twoPointFiveOpt(naive_tour, num_cities, distMatrix);
-        int best_dist = total_distance(naive_tour, distMatrix);
-        vector<int> best_tour = naive_tour;
-        clock_t iteration_end = clock();
-        
-        // Gather time info
-        double approx_iteration_time = 1.3 * 1000.0 * (iteration_end-iteration_start) / CLOCKS_PER_SEC;
-        double time_left = 2000 - (1000.0 * (iteration_start-program_start) / CLOCKS_PER_SEC);
-        int iterations_left = (int) (time_left / approx_iteration_time);
-
-        /*cout << "init dist: " << best_dist << endl;
-        cout << "time left: " << time_left << "ms" << endl;
-        cout << "iter time: " << approx_iteration_time << "ms" << endl;
-        cout << "iterations: " << iterations_left << endl;*/
-
-
-        for (int i = 1; i < min(iterations_left, num_cities); i ++) {
-            getNaiveTour(naive_tour, num_cities, distMatrix, i);
+        // logic to estimate if we really have time left
+        int chris_time_left = 2000 - (1000.0 * (chris_end-program_start) / CLOCKS_PER_SEC);
+        if (chris_time_left >= 1000) {
+            clock_t iteration_start = clock();
+            vector<int> naive_tour;
+            naive_tour.resize(num_cities);
+            getNaiveTour(naive_tour, num_cities, distMatrix, 0);
             twoOpt(naive_tour, num_cities, distMatrix);
             twoPointFiveOpt(naive_tour, num_cities, distMatrix);
-            int tour_dist = total_distance(naive_tour, distMatrix);
-
-            if (tour_dist < best_dist) {
-                //cout << i << ": " << tour_dist << " < " << best_dist << endl;
+            int naive_dist = total_distance(naive_tour, distMatrix);
+            if (best_dist > naive_dist) {
+                best_dist = total_distance(naive_tour, distMatrix);
                 best_tour = naive_tour;
-                best_dist = tour_dist;
+            }
+            clock_t iteration_end = clock();
+            
+            // Gather time info
+            double approx_iteration_time = 1.3 * 1000.0 * (iteration_end-iteration_start) / CLOCKS_PER_SEC;
+            double time_left = 2000 - (1000.0 * (iteration_start-program_start) / CLOCKS_PER_SEC);
+            int iterations_left = (int) (time_left / approx_iteration_time);
+
+            //cout << "init dist: " << best_dist << endl;
+            //cout << "time left: " << time_left << "ms" << endl;
+            //cout << "iter time: " << approx_iteration_time << "ms" << endl;
+            //cout << "iterations: " << iterations_left << endl;
+
+            for (int i = 1; i < min(iterations_left, num_cities); i ++) {
+                getNaiveTour(naive_tour, num_cities, distMatrix, i);
+                twoOpt(naive_tour, num_cities, distMatrix);
+                twoPointFiveOpt(naive_tour, num_cities, distMatrix);
+                int tour_dist = total_distance(naive_tour, distMatrix);
+
+                if (tour_dist < best_dist) {
+                    //cout << i << ": " << tour_dist << " < " << best_dist << endl;
+                    best_tour = naive_tour;
+                    best_dist = tour_dist;
+                }
             }
         }
-
-
-
-        // Get initial tour
-
-        //vector<int> naive_tour;
-        //naive_tour.resize(num_cities);
-        //getNaiveTour(naive_tour, num_cities, distMatrix);
-        //int naive_dist = total_distance(naive_tour, distMatrix);
-
-        //vector<int> chris_tour = christofides(cities, num_cities, edges);
-        //int chris_dist = total_distance(chris_tour, distMatrix);
-        //save_tour(chris_tour, cities, "./graphs/christofides_tour.dot");
-
-        // Improve tour with heuristic
-        //twoOpt(chris_tour, num_cities, distMatrix);
-        //int two_opt_chris_dist = total_distance(chris_tour, distMatrix);
-        //save_tour(chris_tour, cities, "./graphs/2opt_chris_tour.dot");
-
-        // 2.5-Opt heuristic
-        //twoPointFiveOpt(chris_tour, num_cities, distMatrix);
-        //int twopointfive_opt_chris_dist = total_distance(chris_tour, distMatrix);
-        //save_tour(chris_tour, cities, "./graphs/2-5opt_chris_tour.dot");
 
         //cout << "---------------------------------ANSWER---------------------------------" << endl;
         // Print answer
         for (int i = 0; i < num_cities; i++) {
             cout << best_tour[i] << endl;
         }
-
-        
-
     }
 }

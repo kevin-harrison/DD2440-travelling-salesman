@@ -366,29 +366,16 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities, v
 
     // ------------------------Find Euler circuit---------------------
 
-    // Copy mst
-    vector<int> *mstCopy = new vector<int>[num_cities];
-    //mstCopy.reserve(num_cities);
-    for (int i = 0; i < num_cities; i++)
-    {
-        //mstCopy[i].reserve(mst[i].size());
-        mstCopy[i].resize(mst[i].size());
-        mstCopy[i] = mst[i];
-        /*for (int j = 0; j < mst[i].size(); j++) {
-            mstCopy[i].push_back(mst[i][j]);
-        } */
-    }
-
     int start = 0;
     stack<int> stack;
     int pos = start;
     vector<int> path;
     path.reserve(2 * num_cities);
     path.push_back(start);
-    while (!stack.empty() || mstCopy[pos].size() > 0)
+    while (!stack.empty() || mst[pos].size() > 0)
     {
         //Current node has no neighbors
-        if (mstCopy[pos].empty())
+        if (mst[pos].empty())
         {
             //add to circuit
             path.push_back(pos);
@@ -402,14 +389,14 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities, v
             //Add vertex to stack
             stack.push(pos);
             //Take a neighbor
-            int neighbor = mstCopy[pos].back();
+            int neighbor = mst[pos].back();
             //Remove edge between neighbor and current vertex
-            mstCopy[pos].pop_back();
-            for (int i = 0; i < mstCopy[neighbor].size(); i++)
+            mst[pos].pop_back();
+            for (int i = 0; i < mst[neighbor].size(); i++)
             {
-                if (mstCopy[neighbor][i] == pos)
+                if (mst[neighbor][i] == pos)
                 {
-                    mstCopy[neighbor].erase(mstCopy[neighbor].begin() + i);
+                    mst[neighbor].erase(mst[neighbor].begin() + i);
                 }
             }
             //Set neighbor as current vertex
@@ -446,7 +433,6 @@ vector<int> christofides(vector<pair<double, double>> &cities, int num_cities, v
     }
 
     delete[] vertexClusters;
-    delete[] mstCopy;
     delete[] visited;
     return tour;
 }
